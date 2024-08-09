@@ -166,6 +166,16 @@ const MandelbrotSet = () => {
           Reset View
         </button>
       </div>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '10px',
+          textAlign: 'left',
+        }}
+      >
+        <a href="https://alan.computer">alan.computer</a>
+      </div>
     </div>
   );
 };
