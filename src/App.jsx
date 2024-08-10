@@ -5,7 +5,7 @@ const MandelbrotSet = () => {
   const canvasRef = useRef(null);
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [maxIterations, setMaxIterations] = useState(20);
+  const [maxIterations, setMaxIterations] = useState(16);
 
   useEffect(() => {
     const canvas = canvasRef.current;
