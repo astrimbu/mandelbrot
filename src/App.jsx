@@ -50,6 +50,15 @@ const MandelbrotSet = () => {
 
     const imageData = new ImageData(colors, width, height);
     ctx.putImageData(imageData, 0, 0);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 10, height / 2);
+    ctx.lineTo(width / 2 + 10, height / 2);
+    ctx.moveTo(width / 2, height / 2 - 10);
+    ctx.lineTo(width / 2, height / 2 + 10);
+    ctx.stroke();
   }, [zoom, position, maxIterations]);
 
   const handleWheel = (e) => {
@@ -83,7 +92,7 @@ const MandelbrotSet = () => {
   const handleResetView = () => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
-    setMaxIterations(20);
+    setMaxIterations(16);
   };
 
   return (
@@ -120,33 +129,15 @@ const MandelbrotSet = () => {
         }}
       >
         Iterations
-        <button className="btn" onClick={() => handleIterationsChange(10)}>
-          10
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(20)}>
-          20
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(50)}>
-          50
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(100)}>
-          100
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(200)}>
-          200
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(300)}>
-          300
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(400)}>
-          400
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(500)}>
-          500
-        </button>
-        <button className="btn" onClick={() => handleIterationsChange(600)}>
-          600
-        </button>
+        {[2,4,8,16, 32, 64, 128, 256].map((value) => (
+          <button
+            key={value}
+            className={`btn ${maxIterations === value ? 'selected' : ''}`}
+            onClick={() => handleIterationsChange(value)}
+          >
+            {value}
+          </button>
+        ))}
       </div>
       <div
         style={{
