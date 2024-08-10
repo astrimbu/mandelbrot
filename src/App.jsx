@@ -61,9 +61,73 @@ const MandelbrotSet = () => {
     ctx.stroke();
   }, [zoom, position, maxIterations]);
 
-  const handleWheel = (e) => {
-    const newZoom = e.deltaY < 0 ? zoom * 1.15 : zoom / 1.15;
+  const handleZoom = (factor, clientX, clientY) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) / canvas.width;
+    const y = (clientY - rect.top) / canvas.height;
+
+    const newZoom = zoom * factor;
+    const newPosition = {
+      x: position.x + (x - 0.5) * 4 / zoom * (1 - 1 / factor),
+      y: position.y + (y - 0.5) * 4 / zoom * (1 - 1 / factor)
+    }
+
     setZoom(newZoom);
+    setPosition(newPosition);
+  };
+
+  const handleWheel = (e) => {
+    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+    handleZoom(factor, e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const startX = touch.clientX;
+      const startY = touch.clientY;
+
+      const handleTouchMove = (e) => {
+        const touch = e.touches[0];
+        const dx = ((touch.clientX - startX) / zoom) / 150;
+        const dy = ((touch.clientY - startY) / zoom) / 150;
+        setPosition({ x: position.x - dx, y: position.y - dy });
+      }
+
+      const handleTouchEnd = () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      }
+
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleTouchEnd);
+
+    } else if (e.touches.length == 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const startDistance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+
+      const handleTouchMove = (e) => {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const newDistance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+        const factor = newDistance / startDistance;
+
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        handleZoom(factor, centerX, centerY);
+      };
+
+      const handleTouchEnd = () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleTouchEnd);
+    }
   };
 
   const handleMouseDown = (e) => {
@@ -105,6 +169,7 @@ const MandelbrotSet = () => {
       }}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <canvas
         ref={canvasRef}
