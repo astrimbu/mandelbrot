@@ -6,6 +6,16 @@ const MandelbrotSet = () => {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [maxIterations, setMaxIterations] = useState(16);
+  const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,15 +61,22 @@ const MandelbrotSet = () => {
     const imageData = new ImageData(colors, width, height);
     ctx.putImageData(imageData, 0, 0);
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
+    const reticleSize = 20;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'difference';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width / 2 - 10, height / 2);
-    ctx.lineTo(width / 2 + 10, height / 2);
-    ctx.moveTo(width / 2, height / 2 - 10);
-    ctx.lineTo(width / 2, height / 2 + 10);
+    ctx.moveTo(centerX - reticleSize / 2, centerY);
+    ctx.lineTo(centerX + reticleSize / 2, centerY);
+    ctx.moveTo(centerX, centerY - reticleSize / 2);
+    ctx.lineTo(centerX, centerY + reticleSize / 2);
     ctx.stroke();
-  }, [zoom, position, maxIterations]);
+    ctx.restore();
+  }, [zoom, position, maxIterations, canvasSize]);
 
   const handleZoom = (factor, clientX, clientY) => {
     const canvas = canvasRef.current;
@@ -162,8 +179,8 @@ const MandelbrotSet = () => {
   return (
     <div
       style={{
-        width: '100%',
-        height: '600px',
+        width: '100vw',
+        height: '100vh',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -173,13 +190,12 @@ const MandelbrotSet = () => {
     >
       <canvas
         ref={canvasRef}
-        width={800}
-        height={600}
+        width={canvasSize.width}
+        height={canvasSize.height}
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)'
+          top: '0',
+          left: '0',
         }}
       />
 
@@ -194,7 +210,7 @@ const MandelbrotSet = () => {
         }}
       >
         Iterations
-        {[2,4,8,16, 32, 64, 128, 256].map((value) => (
+        {[2,4,8,16, 32, 64, 128, 256, 512].map((value) => (
           <button
             key={value}
             className={`btn ${maxIterations === value ? 'selected' : ''}`}
@@ -232,6 +248,17 @@ const MandelbrotSet = () => {
       >
         <a href="https://alan.computer">alan.computer</a>
       </div>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '10px',
+          right: '10px',
+          textAlign: 'right',
+        }}
+      >
+        {position.x.toFixed(6)},<br/>
+        {position.y.toFixed(6)})
+      </div>
     </div>
   );
 };
@@ -239,7 +266,7 @@ const MandelbrotSet = () => {
 function App() {
   return (
     <>
-      <div style={{ width: '800px' }}>
+      <div>
         <MandelbrotSet />
       </div>
     </>
