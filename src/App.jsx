@@ -18,6 +18,10 @@ const MandelbrotSet = () => {
   }, []);
 
   useEffect(() => {
+    drawMandelbrot();
+  }, [zoom, position, maxIterations, canvasSize]);
+
+  const drawMandelbrot = (hideUI = false) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
@@ -61,22 +65,24 @@ const MandelbrotSet = () => {
     const imageData = new ImageData(colors, width, height);
     ctx.putImageData(imageData, 0, 0);
 
-    const reticleSize = 20;
-    const centerX = width / 2;
-    const centerY = height / 2;
+    if (!hideUI) {
+      const reticleSize = 20;
+      const centerX = width / 2;
+      const centerY = height / 2;
 
-    ctx.save();
-    ctx.globalCompositeOperation = 'difference';
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(centerX - reticleSize / 2, centerY);
-    ctx.lineTo(centerX + reticleSize / 2, centerY);
-    ctx.moveTo(centerX, centerY - reticleSize / 2);
-    ctx.lineTo(centerX, centerY + reticleSize / 2);
-    ctx.stroke();
-    ctx.restore();
-  }, [zoom, position, maxIterations, canvasSize]);
+      ctx.save();
+      ctx.globalCompositeOperation = 'difference';
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(centerX - reticleSize / 2, centerY);
+      ctx.lineTo(centerX + reticleSize / 2, centerY);
+      ctx.moveTo(centerX, centerY - reticleSize / 2);
+      ctx.lineTo(centerX, centerY + reticleSize / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
 
   const handleZoom = (factor, clientX, clientY) => {
     const canvas = canvasRef.current;
@@ -170,10 +176,19 @@ const MandelbrotSet = () => {
     setMaxIterations(value);
   };
 
-  const handleResetView = () => {
+  const handleResetZoom = () => {
     setZoom(1);
-    setPosition({ x: 0, y: 0 });
-    setMaxIterations(16);
+  };
+
+  const handleTakePicture = () => {
+    const canvas = canvasRef.current;
+    drawMandelbrot(true);
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'mandelbrot.png';
+    link.click();
+    drawMandelbrot(false);
   };
 
   return (
@@ -210,7 +225,7 @@ const MandelbrotSet = () => {
         }}
       >
         Iterations
-        {[2,4,8,16, 32, 64, 128, 256, 512].map((value) => (
+        {[2, 4, 8, 16, 32, 64, 128, 256, 512].map((value) => (
           <button
             key={value}
             className={`btn ${maxIterations === value ? 'selected' : ''}`}
@@ -232,10 +247,12 @@ const MandelbrotSet = () => {
           textAlign: 'left',
         }}
       >
-        Mandelbrot set<br/>
-        Fractal visualization<br/>
-        <button onClick={handleResetView}>
-          Reset View
+        Mandelbrot fractal<br/>
+        <button onClick={handleResetZoom}>
+          Reset Zoom
+        </button>
+        <button onClick={handleTakePicture}>
+          Take Picture
         </button>
       </div>
       <div
@@ -256,8 +273,9 @@ const MandelbrotSet = () => {
           textAlign: 'right',
         }}
       >
-        {position.x.toFixed(6)},<br/>
-        {position.y.toFixed(6)})
+        x:{position.x.toFixed(6)}<br/>
+        y:{position.y.toFixed(6)}<br/>
+        {zoom.toFixed(0)}
       </div>
     </div>
   );
