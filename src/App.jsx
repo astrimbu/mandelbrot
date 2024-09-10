@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css'
 
-const MandelbrotSet = () => {
+const FractalVisualizer = () => {
   const canvasRef = useRef(null);
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [maxIterations, setMaxIterations] = useState(16);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [fractalType, setFractalType] = useState('mandelbrot');
 
   useEffect(() => {
     const handleResize = () => {
@@ -18,8 +19,16 @@ const MandelbrotSet = () => {
   }, []);
 
   useEffect(() => {
-    drawMandelbrot();
-  }, [zoom, position, maxIterations, canvasSize]);
+    drawFractal();
+  }, [zoom, position, maxIterations, canvasSize, fractalType]);
+
+  const drawFractal = (hideUI = false) => {
+    if (fractalType === 'mandelbrot') {
+      drawMandelbrot(hideUI);
+    } else {
+      drawBarnsleyFern(hideUI);
+    }
+  };
 
   const drawMandelbrot = (hideUI = false) => {
     const canvas = canvasRef.current;
@@ -66,22 +75,82 @@ const MandelbrotSet = () => {
     ctx.putImageData(imageData, 0, 0);
 
     if (!hideUI) {
-      const reticleSize = 20;
-      const centerX = width / 2;
-      const centerY = height / 2;
-
-      ctx.save();
-      ctx.globalCompositeOperation = 'difference';
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(centerX - reticleSize / 2, centerY);
-      ctx.lineTo(centerX + reticleSize / 2, centerY);
-      ctx.moveTo(centerX, centerY - reticleSize / 2);
-      ctx.lineTo(centerX, centerY + reticleSize / 2);
-      ctx.stroke();
-      ctx.restore();
+      drawReticle(ctx, width, height);
     }
+  };
+
+  const drawBarnsleyFern = (hideUI = false) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, width, height);
+
+    const xMin = position.x - 2 / zoom;
+    const xMax = position.x + 2 / zoom;
+    const yMin = position.y - 2 / zoom;
+    const yMax = position.y + 2 / zoom;
+
+    const scaleX = width / (xMax - xMin);
+    const scaleY = height / (yMax - yMin);
+
+    let x = 0;
+    let y = 0;
+
+    ctx.fillStyle = 'green';
+
+    for (let i = 0; i < maxIterations * 5000; i++) {
+      const r = Math.random();
+      let nx, ny;
+
+      if (r < 0.01) {
+        nx = 0;
+        ny = 0.16 * y;
+      } else if (r < 0.86) {
+        nx = 0.85 * x + 0.04 * y;
+        ny = -0.04 * x + 0.85 * y + 1.6;
+      } else if (r < 0.93) {
+        nx = 0.2 * x - 0.26 * y;
+        ny = 0.23 * x + 0.22 * y + 1.6;
+      } else {
+        nx = -0.15 * x + 0.28 * y;
+        ny = 0.26 * x + 0.24 * y + 0.44;
+      }
+
+      x = nx;
+      y = ny;
+
+      const px = Math.floor((x - xMin) * scaleX);
+      const py = Math.floor((yMax - y) * scaleY);
+
+      if (px >= 0 && px < width && py >= 0 && py < height) {
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+
+    if (!hideUI) {
+      drawReticle(ctx, width, height);
+    }
+  };
+
+  const drawReticle = (ctx, width, height) => {
+    const reticleSize = 20;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'difference';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX - reticleSize / 2, centerY);
+    ctx.lineTo(centerX + reticleSize / 2, centerY);
+    ctx.moveTo(centerX, centerY - reticleSize / 2);
+    ctx.lineTo(centerX, centerY + reticleSize / 2);
+    ctx.stroke();
+    ctx.restore();
   };
 
   const handleZoom = (factor, clientX, clientY) => {
@@ -178,17 +247,23 @@ const MandelbrotSet = () => {
 
   const handleResetZoom = () => {
     setZoom(1);
+    setPosition({ x: 0, y: 0 });
   };
 
   const handleTakePicture = () => {
     const canvas = canvasRef.current;
-    drawMandelbrot(true);
+    drawFractal(true);
     const dataURL = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.href = dataURL;
-    link.download = 'mandelbrot.png';
+    link.download = `${fractalType}.png`;
     link.click();
-    drawMandelbrot(false);
+    drawFractal(false);
+  };
+
+  const toggleFractalType = () => {
+    setFractalType(fractalType === 'mandelbrot' ? 'barnsley' : 'mandelbrot');
+    handleResetZoom();
   };
 
   return (
@@ -247,12 +322,15 @@ const MandelbrotSet = () => {
           textAlign: 'left',
         }}
       >
-        Mandelbrot fractal<br/>
+        {fractalType === 'mandelbrot' ? 'Mandelbrot fractal' : 'Barnsley fern'}<br/>
         <button onClick={handleResetZoom}>
           Reset Zoom
         </button>
         <button onClick={handleTakePicture}>
           Take Picture
+        </button>
+        <button onClick={toggleFractalType}>
+          Toggle Fractal
         </button>
       </div>
       <div
@@ -285,7 +363,7 @@ function App() {
   return (
     <>
       <div>
-        <MandelbrotSet />
+        <FractalVisualizer />
       </div>
     </>
   )
