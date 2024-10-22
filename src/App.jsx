@@ -300,7 +300,7 @@ const FractalVisualizer = () => {
         }}
       >
         Iterations
-        {[2, 4, 8, 16, 32, 64, 128, 256, 512].map((value) => (
+        {[16, 32, 64, 128, 256, 512].map((value) => (
           <button
             key={value}
             className={`btn ${maxIterations === value ? 'selected' : ''}`}
