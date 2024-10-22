@@ -123,7 +123,7 @@ const FractalVisualizer = () => {
       y = ny;
 
       const px = Math.floor((x - xMin) * scaleX);
-      const py = Math.floor((yMax - y) * scaleY);
+      const py = Math.floor((y - yMin) * scaleY);
 
       if (px >= 0 && px < width && py >= 0 && py < height) {
         ctx.fillRect(px, py, 1, 1);
@@ -246,8 +246,13 @@ const FractalVisualizer = () => {
   };
 
   const handleResetZoom = () => {
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
+    if (fractalType === 'mandelbrot') {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+    } else {
+      setZoom(0.3);
+      setPosition({ x: 0, y: 5 });
+    }
   };
 
   const handleTakePicture = () => {
@@ -262,8 +267,17 @@ const FractalVisualizer = () => {
   };
 
   const toggleFractalType = () => {
-    setFractalType(fractalType === 'mandelbrot' ? 'barnsley' : 'mandelbrot');
-    handleResetZoom();
+    setFractalType((prevType) => {
+      const newType = prevType === 'mandelbrot' ? 'barnsley' : 'mandelbrot';
+      if (newType === 'mandelbrot') {
+        setZoom(1);
+        setPosition({ x: 0, y: 0 });
+      } else {
+        setZoom(0.3);
+        setPosition({ x: 0, y: 5 });
+      }
+      return newType;
+    });
   };
 
   return (
